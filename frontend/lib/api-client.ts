@@ -21,6 +21,11 @@ export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): 
   try { payload = await response.json() } catch { /* e.g. empty logout response */ }
 
   if (!response.ok) {
+    if ((response.status === 401 || response.status === 403) && typeof window !== 'undefined') {
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login'
+      }
+    }
     const message = payload?.error || `API request failed (${response.status})`
     throw new Error(message)
   }

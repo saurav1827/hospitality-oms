@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 import { useSession } from '@/lib/use-session'
 import { useRealtime } from '@/lib/use-realtime'
 import { apiFetch, type Order, type MenuItem, type Location, type Room, submitOrder, updateOrder, deleteOrder } from '@/lib/api-client'
-import { Plus, X, ShoppingBag, Loader2, Search, CreditCard, ChevronRight, Edit3, Filter, ChevronDown, Check, Trash2, Utensils } from 'lucide-react'
+import { Plus, X, ShoppingBag, Loader2, Search, CreditCard, ChevronRight, Edit3, Filter, ChevronDown, Check, Trash2, Utensils, AlertTriangle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 import { OrderDetailModal } from '@/components/OrderDetailModal'
@@ -394,6 +394,7 @@ export default function OrdersPage() {
   const menuItems = menuData?.menu ?? []
 
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false)
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null)
   const [cart, setCart] = useState<{ item: MenuItem, quantity: number, note: string }[]>([])
   const [orderType, setOrderType] = useState<'dine-in' | 'room-service'>('dine-in')
@@ -527,14 +528,26 @@ export default function OrdersPage() {
 
   const updateQuantity = (itemId: string, delta: number) => {
     setCart(prev => {
+      const item = prev.find(c => c.item.id === itemId)
+      if (item && item.quantity + delta <= 0) {
+        return prev.filter(c => c.item.id !== itemId)
+      }
       return prev.map(c => {
         if (c.item.id === itemId) {
           const newQ = c.quantity + delta
-          return newQ > 0 ? { ...c, quantity: newQ } : c
+          return { ...c, quantity: Math.min(newQ, 99) }
         }
         return c
       })
     })
+  }
+
+  const handleCloseModal = () => {
+    if (cart.length > 0) {
+      setShowCloseConfirm(true)
+      return
+    }
+    setIsModalOpen(false)
   }
 
   const removeFromCart = (itemId: string) => {
@@ -734,7 +747,7 @@ export default function OrdersPage() {
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
         >
-          <div className="absolute inset-0 bg-zinc-950/60 backdrop-blur-md" onClick={() => setIsModalOpen(false)} />
+          <div className="absolute inset-0 bg-zinc-950/60 backdrop-blur-md" onClick={handleCloseModal} />
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -751,7 +764,7 @@ export default function OrdersPage() {
                     Point of Sale
                   </h3>
                   <button
-                    onClick={() => setIsModalOpen(false)}
+                    onClick={handleCloseModal}
                     className="p-2 text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
                   >
                     <X size={20} />
@@ -973,6 +986,46 @@ export default function OrdersPage() {
               </div>
             </div>
           </motion.div>
+
+          <AnimatePresence>
+            {showCloseConfirm && (
+              <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                <div className="absolute inset-0 bg-zinc-950/80 backdrop-blur-sm" onClick={() => setShowCloseConfirm(false)} />
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="relative bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl p-6 max-w-sm w-full flex flex-col items-center text-center"
+                >
+                  <div className="w-12 h-12 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center mb-4">
+                    <AlertTriangle size={24} />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">Discard Order?</h3>
+                  <p className="text-sm text-zinc-400 mb-6">
+                    You have items in your cart. Are you sure you want to close? Your cart will be cleared.
+                  </p>
+                  <div className="flex gap-3 w-full">
+                    <button
+                      onClick={() => setShowCloseConfirm(false)}
+                      className="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white font-medium transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowCloseConfirm(false)
+                        setIsModalOpen(false)
+                        setCart([])
+                      }}
+                      className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white font-medium transition-colors"
+                    >
+                      Discard
+                    </button>
+                  </div>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
         </motion.div>
       )}
 
