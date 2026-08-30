@@ -72,8 +72,47 @@ def update_order(*, order_id, items, notes=''):
         validated_items.append(item)
     items = validated_items
     
-    # Delete old items
-    order.items.all().delete()
+    # Smart merge to preserve OrderItem IDs (Bug #5 Fix)
+    existing_items = list(order.items.all())
+    existing_items_dict = {str(i.menu_item_id): i for i in existing_items}
+    
+    items_to_create = []
+    items_to_update = []
+    processed_menu_item_ids = set()
+    
+    for item in items:
+        mi_id = str(item['menu_item_id'])
+        processed_menu_item_ids.add(mi_id)
+        
+        if mi_id in existing_items_dict:
+            existing = existing_items_dict[mi_id]
+            existing.quantity = item['quantity']
+            existing.unit_price_snapshot = item['unit_price']
+            existing.note = item.get('note', '')
+            items_to_update.append(existing)
+        else:
+            items_to_create.append(OrderItem(
+                order=order,
+                menu_item_id=item['menu_item_id'],
+                name_snapshot=item['name'],
+                unit_price_snapshot=item['unit_price'],
+                quantity=item['quantity'],
+                modifiers_snapshot=item.get('modifiers', []),
+                note=item.get('note', '')
+            ))
+            
+    # Delete removed items
+    items_to_delete_ids = [i.id for mi_id, i in existing_items_dict.items() if mi_id not in processed_menu_item_ids]
+    if items_to_delete_ids:
+        order.items.filter(id__in=items_to_delete_ids).delete()
+        
+    if items_to_update:
+        from django.db.models import F
+        # Use bulk_update to save DB queries
+        OrderItem.objects.bulk_update(items_to_update, ['quantity', 'unit_price_snapshot', 'note'])
+        
+    if items_to_create:
+        OrderItem.objects.bulk_create(items_to_create)
     
     # Calculate new totals
     subtotal = sum((Decimal(str(item['unit_price'])) * int(item['quantity']) for item in items), Decimal('0'))
@@ -87,9 +126,10 @@ def update_order(*, order_id, items, notes=''):
         order.notes = notes
     order.save()
     
-    # Create new items
-    OrderItem.objects.bulk_create([OrderItem(order=order, menu_item_id=item['menu_item_id'], name_snapshot=item['name'], unit_price_snapshot=item['unit_price'], quantity=item['quantity'], modifiers_snapshot=item.get('modifiers', []), note=item.get('note', '')) for item in items])
+    # Sync Kitchen Ticket (Bug #6 Fix)
+    ticket = order.tickets.first()
+    if ticket and ticket.status not in ['ready', 'recalled']:
+        ticket.status = 'new'
+        ticket.save(update_fields=['status'])
     
-    # Assuming the ticket might need to be refreshed, we can leave it as is or create a new one if needed.
-    # For now, just modifying the order is sufficient.
     return order

@@ -136,6 +136,9 @@ class OrderReadyView(APIView):
     def post(self, request, pk):
         order = get_object_or_404(Order, id=pk)
         
+        if order.status not in ['submitted', 'preparing']:
+            return Response({'error': f'Cannot mark order ready from status: {order.status}'}, status=status.HTTP_400_BAD_REQUEST)
+        
         # In a real system, you'd check if it's already ready, but for now just update it
         order.status = 'ready'
         order.ready_by_name = request.user.get_full_name() or request.user.username
@@ -182,6 +185,11 @@ class OrderDetailView(APIView):
 
     def patch(self, request, pk):
         from .services import update_order
+        
+        order = get_object_or_404(Order, id=pk)
+        if order.payment_status == 'paid':
+            return Response({'error': 'Cannot modify an order that has already been paid'}, status=status.HTTP_400_BAD_REQUEST)
+            
         items = request.data.get('items', [])
         notes = request.data.get('notes')
         
