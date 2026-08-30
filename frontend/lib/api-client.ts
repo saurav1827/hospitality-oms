@@ -6,7 +6,7 @@ function getCsrfToken(): string {
 }
 
 export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const url = endpoint.startsWith('http') ? endpoint : `${API_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`
+  const url = endpoint.startsWith('http') ? endpoint : `${API_URL.replace(/\/+$/, '')}/${endpoint.replace(/^\/+/, '')}`
   const method = (options.method ?? 'GET').toUpperCase()
 
   const headers: HeadersInit = {
