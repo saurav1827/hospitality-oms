@@ -96,7 +96,8 @@ export async function deleteMenuItem(id: string) {
 export async function uploadImage(file: File) {
   const formData = new FormData()
   formData.append('file', file)
-  const response = await fetch(`${API_URL}/api/upload/`, {
+  const baseUrl = API_URL.replace(/\/+$/, '')
+  const response = await fetch(`${baseUrl}/api/upload/`, {
     method: 'POST',
     headers: { 'X-CSRFToken': getCsrfToken() },
     body: formData,
