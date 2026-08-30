@@ -1,0 +1,37 @@
+# v0 sandbox internal files
+__v0_runtime_loader.js
+__v0_devtools.tsx
+__v0_jsx-dev-runtime.ts
+.snowflake/
+.v0-trash/
+.vercel/
+
+# ── Secrets (NEVER commit these) ──────────────────────────
+.env
+.env*.local
+backend/.env
+
+# ── Python ────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+venv/
+backend/venv/
+backend/db.sqlite3
+backend/staticfiles/
+
+# ── Node / Next.js ────────────────────────────────────────
+node_modules/
+.next/
+frontend/node_modules/
+frontend/.next/
+
+# ── OS ────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── IDE ───────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
