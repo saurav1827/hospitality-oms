@@ -740,10 +740,10 @@ export default function OrdersPage() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="relative w-full max-w-[1400px] h-[90vh] bg-zinc-900/60 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden flex flex-col lg:flex-row"
+            className="relative w-full lg:max-w-[1400px] h-[100dvh] lg:h-[90vh] bg-zinc-900/60 backdrop-blur-2xl lg:border border-white/10 lg:rounded-[2rem] shadow-2xl overflow-y-auto lg:overflow-hidden flex flex-col lg:flex-row"
           >
             {/* Left side: Menu Selection */}
-            <div className="flex-1 flex flex-col min-h-0 min-w-0 relative z-10">
+            <div className="lg:flex-1 flex flex-col lg:min-h-0 min-w-0 relative z-10">
               <div className="p-6 border-b border-white/5 flex flex-col gap-5">
                 <div className="flex items-center justify-between">
                   <h3 className="text-2xl font-black text-white flex items-center gap-3">
@@ -789,7 +789,7 @@ export default function OrdersPage() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 custom-scrollbar bg-black/20">
+              <div className="lg:flex-1 lg:overflow-y-auto p-4 lg:p-6 custom-scrollbar bg-black/20">
                 {filteredMenu.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full text-zinc-500">
                     <ShoppingBag size={48} className="mb-4 opacity-20" />
@@ -845,7 +845,7 @@ export default function OrdersPage() {
             </div>
 
             {/* Right side: Cart */}
-            <div className="w-full lg:w-[420px] flex-shrink-0 flex flex-col bg-zinc-950 border-l border-white/10 relative min-h-0">
+            <div className="w-full lg:w-[420px] flex-shrink-0 flex flex-col bg-zinc-950 lg:border-l border-t lg:border-t-0 border-white/10 relative lg:min-h-0">
               <div className="p-6 border-b border-white/5 flex items-center justify-between bg-zinc-900/50">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                   Current Order
@@ -853,7 +853,7 @@ export default function OrdersPage() {
                 <span className="text-xs font-bold px-3 py-1 bg-orange-500/20 text-orange-400 rounded-md border border-orange-500/20">{cart.reduce((a, b) => a + b.quantity, 0)} Items</span>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-5 custom-scrollbar">
+              <div className="lg:flex-1 lg:overflow-y-auto p-4 lg:p-5 custom-scrollbar">
                 {cart.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-zinc-600">
                     <ShoppingBag size={56} className="mb-4 opacity-20" />
